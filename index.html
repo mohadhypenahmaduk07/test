@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StockPilot Pro | Inventory Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#dashboard" aria-label="StockPilot Pro home">
+          <span class="brand-mark">SP</span>
+          <span>
+            <strong>StockPilot</strong>
+            <small>Inventory OS</small>
+          </span>
+        </a>
+
+        <nav class="nav-list" aria-label="Primary navigation">
+          <a href="#dashboard" class="nav-link active" data-view-link="dashboard">
+            <i data-lucide="layout-dashboard"></i>
+            Dashboard
+          </a>
+          <a href="#inventory" class="nav-link" data-view-link="inventory">
+            <i data-lucide="boxes"></i>
+            Inventory
+          </a>
+          <a href="#orders" class="nav-link" data-view-link="orders">
+            <i data-lucide="clipboard-list"></i>
+            Orders
+          </a>
+          <a href="#suppliers" class="nav-link" data-view-link="suppliers">
+            <i data-lucide="truck"></i>
+            Suppliers
+          </a>
+          <a href="#analytics" class="nav-link" data-view-link="analytics">
+            <i data-lucide="line-chart"></i>
+            Analytics
+          </a>
+        </nav>
+
+        <div class="sidebar-panel">
+          <span class="status-dot"></span>
+          <div>
+            <strong>Live Workspace</strong>
+            <small>Auto-saved locally</small>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Advanced Inventory Management System</p>
+            <h1 id="view-title">Dashboard</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button" id="resetDemoBtn" type="button" aria-label="Reset demo data" title="Reset demo data">
+              <i data-lucide="rotate-ccw"></i>
+            </button>
+            <button class="secondary-button" id="exportBtn" type="button">
+              <i data-lucide="download"></i>
+              Export CSV
+            </button>
+            <button class="primary-button" id="addProductBtn" type="button">
+              <i data-lucide="plus"></i>
+              Add Product
+            </button>
+          </div>
+        </header>
+
+        <section id="dashboard" class="view active" data-title="Dashboard">
+          <div class="metric-grid">
+            <article class="metric-card">
+              <span class="metric-icon teal"><i data-lucide="package-check"></i></span>
+              <div>
+                <p>Total SKUs</p>
+                <strong id="totalSkus">0</strong>
+                <small id="activeCategories">0 categories tracked</small>
+              </div>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon amber"><i data-lucide="badge-dollar-sign"></i></span>
+              <div>
+                <p>Inventory Value</p>
+                <strong id="inventoryValue">$0</strong>
+                <small>Cost-weighted stock on hand</small>
+              </div>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon red"><i data-lucide="triangle-alert"></i></span>
+              <div>
+                <p>Low Stock</p>
+                <strong id="lowStockCount">0</strong>
+                <small>Items below reorder point</small>
+              </div>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon blue"><i data-lucide="shopping-cart"></i></span>
+              <div>
+                <p>Open Orders</p>
+                <strong id="openOrdersCount">0</strong>
+                <small>Pending supplier orders</small>
+              </div>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel inventory-health-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Operations</p>
+                  <h2>Stock Health</h2>
+                </div>
+                <span id="healthScoreLabel" class="score-pill">0%</span>
+              </div>
+              <div class="health-layout">
+                <div class="donut" id="healthDonut" aria-label="Inventory health score">
+                  <span id="healthScore">0%</span>
+                </div>
+                <div class="health-list" id="healthList"></div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Attention</p>
+                  <h2>Reorder Queue</h2>
+                </div>
+                <button class="ghost-button" id="createReorderBtn" type="button">
+                  <i data-lucide="sparkles"></i>
+                  Auto Build
+                </button>
+              </div>
+              <div class="compact-list" id="reorderList"></div>
+            </section>
+
+            <section class="panel wide-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Recent Activity</p>
+                  <h2>Audit Trail</h2>
+                </div>
+                <span class="muted-pill">System log</span>
+              </div>
+              <div class="activity-list" id="activityList"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="inventory" class="view" data-title="Inventory">
+          <div class="toolbar">
+            <label class="search-box" for="searchInput">
+              <i data-lucide="search"></i>
+              <input id="searchInput" type="search" placeholder="Search SKU, product, category, supplier..." />
+            </label>
+            <select id="categoryFilter" aria-label="Filter by category">
+              <option value="all">All categories</option>
+            </select>
+            <select id="statusFilter" aria-label="Filter by status">
+              <option value="all">All stock levels</option>
+              <option value="healthy">Healthy</option>
+              <option value="low">Low stock</option>
+              <option value="critical">Critical</option>
+              <option value="overstock">Overstock</option>
+            </select>
+          </div>
+
+          <div class="table-shell">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Stock</th>
+                  <th>Reorder</th>
+                  <th>Supplier</th>
+                  <th>Value</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="orders" class="view" data-title="Purchase Orders">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Procurement</p>
+              <h2>Purchase Order Pipeline</h2>
+            </div>
+            <button class="primary-button" id="newOrderBtn" type="button">
+              <i data-lucide="file-plus-2"></i>
+              New Order
+            </button>
+          </div>
+          <div class="order-board" id="orderBoard"></div>
+        </section>
+
+        <section id="suppliers" class="view" data-title="Suppliers">
+          <div class="supplier-grid" id="supplierGrid"></div>
+        </section>
+
+        <section id="analytics" class="view" data-title="Analytics">
+          <div class="analytics-grid">
+            <section class="panel wide-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Category Mix</p>
+                  <h2>Inventory Value by Category</h2>
+                </div>
+              </div>
+              <div class="bar-chart" id="categoryChart"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Risk</p>
+                  <h2>Demand Forecast</h2>
+                </div>
+              </div>
+              <div class="forecast-list" id="forecastList"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="modal" id="productModal">
+      <form method="dialog" class="modal-card" id="productForm">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Inventory Item</p>
+            <h2 id="modalTitle">Add Product</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" id="closeModalBtn" aria-label="Close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <input type="hidden" id="productId" />
+        <div class="form-grid">
+          <label>
+            Product Name
+            <input id="productName" required maxlength="80" />
+          </label>
+          <label>
+            SKU
+            <input id="productSku" required maxlength="24" />
+          </label>
+          <label>
+            Category
+            <input id="productCategory" required maxlength="40" />
+          </label>
+          <label>
+            Supplier
+            <input id="productSupplier" required maxlength="60" />
+          </label>
+          <label>
+            Stock Quantity
+            <input id="productStock" type="number" required min="0" />
+          </label>
+          <label>
+            Reorder Point
+            <input id="productReorder" type="number" required min="0" />
+          </label>
+          <label>
+            Unit Cost
+            <input id="productCost" type="number" required min="0" step="0.01" />
+          </label>
+          <label>
+            Monthly Demand
+            <input id="productDemand" type="number" required min="0" />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" id="cancelProductBtn">Cancel</button>
+          <button class="primary-button" type="submit">
+            <i data-lucide="save"></i>
+            Save Product
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="orderModal">
+      <form method="dialog" class="modal-card" id="orderForm">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Purchase Order</p>
+            <h2>Create Order</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" id="closeOrderModalBtn" aria-label="Close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="form-grid">
+          <label>
+            Product
+            <select id="orderProduct" required></select>
+          </label>
+          <label>
+            Quantity
+            <input id="orderQuantity" type="number" required min="1" />
+          </label>
+          <label>
+            Status
+            <select id="orderStatus" required>
+              <option>Draft</option>
+              <option>Submitted</option>
+              <option>In Transit</option>
+              <option>Received</option>
+            </select>
+          </label>
+          <label>
+            Expected Delivery
+            <input id="orderEta" type="date" required />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" id="cancelOrderBtn">Cancel</button>
+          <button class="primary-button" type="submit">
+            <i data-lucide="send"></i>
+            Create Order
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
